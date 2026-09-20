@@ -8,14 +8,14 @@ pkgname=omakeyboard
 pkgver=0.1.0
 pkgrel=1
 pkgdesc='Keyboard remapping and shortcuts for Omarchy, built with Qt Quick'
-arch=('x86_64')
+arch=('x86_64' 'aarch64')
 url='https://github.com/gabamnml/omakeyboard'
 license=('MIT')
 install='omakeyboard.install'
+# The build already strips nothing useful, and the Omarchy repository's own
+# Qt applications ship without a separate debug package.
+options=('!debug')
 
-# The app shipped briefly under a shorter, more cryptic name. Declaring the
-# replacement lets pacman swap it out in one step instead of leaving two
-# packages that own the same files.
 # Every name this app has shipped under, so pacman swaps the old one out in a
 # single step instead of leaving two packages that own the same files.
 replaces=('omakbrds' 'omakeyboards')
@@ -24,9 +24,22 @@ conflicts=('omakbrds' 'omakeyboards')
 # Everything here is part of an Omarchy system already: Qt for the interface,
 # libxkbcommon for the keymaps, lua to read the Hyprland configuration, and
 # Hyprland itself to apply changes. No input daemon is involved.
-depends=('qt6-base' 'qt6-declarative' 'qt6-wayland' 'libxkbcommon' 'lua' 'hyprland')
+depends=(
+  'hicolor-icon-theme'
+  'hyprland'
+  'libxkbcommon'
+  'lua'
+  'qt6-base'
+  'qt6-declarative'
+  'qt6-wayland'
+)
 makedepends=('git' 'gcc' 'make' 'qt6-base' 'qt6-declarative')
-checkdepends=('qt6-base')
+# The interface check renders the app offscreen, so the tests need Qt Quick
+# as well as Qt itself.
+checkdepends=(
+  'qt6-base'
+  'qt6-declarative'
+)
 optdepends=('xdg-desktop-portal: follow the desktop dark mode and text scale, and use the desktop file chooser when exporting or importing')
 
 # The AUR package builds a tagged release straight from the repository. The
