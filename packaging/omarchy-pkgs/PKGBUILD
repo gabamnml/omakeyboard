@@ -46,7 +46,7 @@ optdepends=('xdg-desktop-portal: follow the desktop dark mode and text scale, an
 # The Omarchy repository builds a published tag, never a working tree. Fill
 # the checksum in with `makepkg -g` once the tag exists.
 source=("$pkgname-$pkgver.tar.gz::https://github.com/gabamnml/omakeyboard/archive/refs/tags/v$pkgver.tar.gz")
-sha256sums=('SKIP')
+sha256sums=('3cc272c47cd0670b6d475e058fafbfbe264555780e7442c357428bbf1b7282a6')
 
 build() {
   cd "$srcdir/$pkgname-$pkgver"
