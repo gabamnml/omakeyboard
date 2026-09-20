@@ -1,8 +1,4 @@
 # Maintainer: Gabriel Aramburu <aramburu.gabriel@gmail.com>
-#
-# The PKGBUILD for the AUR. omakeyboard.install beside it is a symlink to the
-# one in packaging/; copy this directory with `cp -rL` when publishing, so the
-# AUR repository gets the file itself.
 
 pkgname=omakeyboard
 pkgver=0.1.0
@@ -33,7 +29,12 @@ depends=(
   'qt6-declarative'
   'qt6-wayland'
 )
-makedepends=('git' 'gcc' 'make' 'qt6-base' 'qt6-declarative')
+makedepends=(
+  'gcc'
+  'make'
+  'qt6-base'
+  'qt6-declarative'
+)
 # The interface check renders the app offscreen, so the tests need Qt Quick
 # as well as Qt itself.
 checkdepends=(
@@ -42,24 +43,24 @@ checkdepends=(
 )
 optdepends=('xdg-desktop-portal: follow the desktop dark mode and text scale, and use the desktop file chooser when exporting or importing')
 
-# The AUR package builds a tagged release straight from the repository. The
-# local packaging/PKGBUILD next to it builds the working tree instead, which
-# is what `makepkg` in this checkout does.
-source=("git+https://github.com/gabamnml/omakeyboard.git#tag=v$pkgver")
-sha256sums=('SKIP')
+# Both destinations build a published tag, never a working tree. After tagging
+# a new version, update pkgver and take the checksum from `makepkg -g`, then
+# regenerate .SRCINFO with `makepkg --printsrcinfo > .SRCINFO`.
+source=("$pkgname-$pkgver.tar.gz::https://github.com/gabamnml/omakeyboard/archive/refs/tags/v$pkgver.tar.gz")
+sha256sums=('3cc272c47cd0670b6d475e058fafbfbe264555780e7442c357428bbf1b7282a6')
 
 build() {
-  cd "$srcdir/$pkgname"
+  cd "$srcdir/$pkgname-$pkgver"
   ./bin/build
 }
 
 check() {
-  cd "$srcdir/$pkgname"
+  cd "$srcdir/$pkgname-$pkgver"
   ./bin/test
 }
 
 package() {
-  cd "$srcdir/$pkgname"
+  cd "$srcdir/$pkgname-$pkgver"
 
   install -Dm755 build/omakeyboard "$pkgdir/usr/bin/omakeyboard"
   install -Dm644 packaging/omakeyboard.desktop \

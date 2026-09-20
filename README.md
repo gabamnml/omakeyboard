@@ -277,11 +277,10 @@ on its own.
 Two PKGBUILDs, because they build different things:
 
 - `packaging/PKGBUILD` builds the working tree. This is what `./bin/install`
-  uses, and what produces the package attached to a release.
-- `packaging/aur/PKGBUILD` builds a tagged commit straight from the
-  repository, and is what the AUR package contains. Its `omakeyboard.install`
-  is a symlink to the one beside it, so publish that directory with
-  `cp -rL packaging/aur <aur-checkout>`.
+  uses.
+- `packaging/release/PKGBUILD` builds a published tag's source archive. One
+  recipe, two destinations — the Omarchy package repository and the AUR —
+  described in [`packaging/release/README.md`](packaging/release/README.md).
 
 Cutting a release:
 
@@ -289,7 +288,12 @@ Cutting a release:
 ./bin/test                                  # engine and interface
 git tag -a v0.1.0 -m "OmaKeyboard 0.1.0"
 git push origin v0.1.0
-cd packaging && makepkg -f
+
+cd packaging/release
+# update pkgver, then:
+makepkg -g                                  # the tag's checksum
+makepkg --printsrcinfo > .SRCINFO
+makepkg -f                                  # builds from the tag; attach this
 ```
 
 ## Licence
