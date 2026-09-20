@@ -9,6 +9,8 @@ Built with Qt 6 and Qt Quick, in the shape of
 [Omawrite](https://github.com/omacom/omawrite) — its own process, its own
 Wayland window, no Quickshell plugin and no bar widget.
 
+![The Keyboard page, listing mappings](docs/screenshots/keyboard.png)
+
 ## What it does
 
 **Per keyboard.** Rules attach to a keyboard by the name Hyprland reports, so
@@ -31,12 +33,46 @@ list of layout options.
 
 **Fn-style layers.** Turn a key into a layer chooser and the function row can
 become brightness and volume while it is held, with the keys' normal meaning
-intact. Two independent layers are available.
+intact. Two layers are available, one per XKB level, and a key can do
+something different on each: H can be Left on one and Home on the other.
+
+**The keyboard, drawn.** The list has a second view that shows your mappings
+on the keys they belong to. Switching to a layer shows what the keys do while
+its key is held, and clicking a key opens the editor for it. Only the block
+every keyboard from 60% up shares is drawn: the physical size of a keyboard is
+not something the system knows, and drawing keys you may not have is worse
+than drawing fewer.
+
+![The same mappings drawn on the keyboard](docs/screenshots/keyboard-map.png)
+
+**Recipes.** Ready-made setups a click away — Caps Lock as Control, Caps Lock
+as Escape, arrows under H J K L, Alt and Super swapped. Each one adds ordinary
+mappings you can edit afterwards, and a recipe whose keys are taken says so
+instead of doubling up. The shortcuts page has its own, each on a combination
+nothing on your system is bound to yet.
 
 **Shortcuts.** Key combinations that launch applications, run media and window
 actions, or toggle system settings. Installed applications are read from their
 `.desktop` files; Omarchy's own launchers and commands are discovered from the
 installed version rather than hardcoded.
+
+![The Shortcuts page](docs/screenshots/shortcuts.png)
+
+**A key tester on the drawing.** Press keys and watch them sink on the map,
+with what each one types right now beside it. Holding a layer key shows that
+layer for as long as it is held.
+
+**Undo, and snapshots.** Deleting a mapping, a shortcut or a whole keyboard's
+rules can be taken back for a few seconds, or with Ctrl+Z. Every apply takes a
+snapshot first; the 20 most recent are kept, and any of them can be restored
+or deleted from Settings.
+
+**Share a setup.** Export writes every keyboard, mapping and shortcut as one
+JSON file. Importing asks which of *your* keyboards each one goes to — device
+names differ between machines — adds to what you have rather than replacing
+it, and changes nothing until you apply.
+
+![Settings, with backups and sharing](docs/screenshots/settings.png)
 
 **Conflict detection that knows your system.** It reads the bindings already in
 effect — Omarchy's defaults and anything you wrote by hand — and tells you when
@@ -55,6 +91,22 @@ thing in the Advanced tab:
   not to the focused window.
 
 Nothing is installed to work around these, and nothing is suggested.
+
+## Driven from the keyboard
+
+A keyboard app that needed a mouse would be an odd thing.
+
+| Keys | |
+|---|---|
+| `Ctrl+1` … `Ctrl+4` | switch pages |
+| `Ctrl+N` | new mapping, or new shortcut on the shortcuts page |
+| `Ctrl+K` | list view or keyboard view |
+| `Ctrl+L` | step through the layers in the keyboard view |
+| `Ctrl+Tab` | next keyboard |
+| `Ctrl+T` | the key tester, on the Advanced page |
+| `Ctrl+Z` | undo the last deletion |
+| `Ctrl+Return` | apply |
+| `F5` | re-read everything from disk |
 
 ## Everything it uses is already on the system
 
@@ -88,11 +140,25 @@ Run the tests — no display and no Hyprland needed, every test runs against a
 throwaway XDG root:
 
 ```bash
-./bin/test
+./bin/test        # the engine, plus the interface check below
+./bin/smoke       # loads the QML, opens every page, fails on any warning
+```
+
+`bin/smoke` renders the app offscreen, so it needs neither a compositor nor a
+display. The same mechanism takes the screenshots in this file:
+
+```bash
+QT_QPA_PLATFORM=offscreen OMAKEYBOARD_GRAB=shot.png OMAKEYBOARD_SIZE=1100x760 \
+  ./build/omakeyboard
 ```
 
 Requires `qt6-base`, `qt6-declarative`, `qt6-wayland`, `libxkbcommon`, `lua`
 and `hyprland`, all of which an Omarchy install already has.
+
+It also needs Omarchy 4 or newer, which is what configures Hyprland in Lua:
+everything the app writes hangs off `~/.config/hypr/hyprland.lua`. On a
+desktop without that file the app opens, says so, and refuses to write
+anything.
 
 ## Files it writes
 
@@ -180,7 +246,7 @@ ConfigRepository ── the only door between interface and engine
       ├── KeymapService         XKB keymap generation and compilation
       ├── OmarchyConfigWriter   data table, loader, managed block, atomic writes
       ├── ConfigBackupService   snapshots and rollback
-      ├── HyprlandReloadService hyprctl: devices, reload, configerrors, submaps
+      ├── HyprlandReloadService hyprctl: devices, reload, configerrors
       └── NativeEngine          what this system can and cannot do
 ```
 
@@ -190,17 +256,23 @@ on its own.
 
 ## Releases
 
-Tag a version and build the package from the tag:
+Two PKGBUILDs, because they build different things:
+
+- `packaging/PKGBUILD` builds the working tree. This is what `./bin/install`
+  uses, and what produces the package attached to a release.
+- `packaging/aur/PKGBUILD` builds a tagged commit straight from the
+  repository, and is what the AUR package contains. Its `omakeyboard.install`
+  is a symlink to the one beside it, so publish that directory with
+  `cp -rL packaging/aur <aur-checkout>`.
+
+Cutting a release:
 
 ```bash
+./bin/test                                  # engine and interface
 git tag -a v0.1.0 -m "OmaKeyboard 0.1.0"
 git push origin v0.1.0
 cd packaging && makepkg -f
 ```
-
-`packaging/PKGBUILD` builds from the working tree, so a release attaches the
-resulting `omakeyboard-<version>-1-x86_64.pkg.tar.zst` alongside the source
-tarball.
 
 ## Licence
 
