@@ -8,6 +8,7 @@
 #include <QQuickWindow>
 #include <QTimer>
 #include <QUrl>
+#include <QVariant>
 
 #include "core/ConfigRepository.h"
 #include "core/HyprlandReloadService.h"
@@ -121,6 +122,16 @@ int main(int argc, char *argv[])
                     window->setProperty("pageIndex", page);
             });
             delay += 300;
+        }
+
+        // One dialog, by name, so a screenshot can show it open.
+        const QString open = qEnvironmentVariable("OMAKEYBOARD_OPEN");
+        if (!open.isEmpty()) {
+            QTimer::singleShot(delay, &app, [window, open]() {
+                if (window)
+                    QMetaObject::invokeMethod(window, "devOpen", Q_ARG(QVariant, open));
+            });
+            delay += 400;
         }
 
         QTimer::singleShot(delay + 900, &app, [window, grabPath]() {

@@ -65,6 +65,25 @@ ApplicationWindow {
         onActivated: config.reload()
     }
 
+    // Opens one thing by name, for bin/screenshots: the offscreen render mode
+    // can then capture a dialog rather than only the page behind it. Nothing
+    // in the app calls this.
+    function devOpen(what) {
+        const page = pageStack.children[window.pageIndex]
+        if (what === "mapping")
+            page.newMapping()
+        else if (what === "recipes")
+            page.showRecipes()
+        else if (what === "map")
+            page.showMap(0)
+        else if (what === "layer")
+            page.showMap(1)
+        else if (what === "tester")
+            page.startTester()
+        else if (what === "apply")
+            window.applyNow()
+    }
+
     function applyNow() {
         applyReport.show(config.apply())
     }

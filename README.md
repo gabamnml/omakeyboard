@@ -9,6 +9,13 @@ Built with Qt 6 and Qt Quick, in the shape of
 [Omawrite](https://github.com/omacom/omawrite) — its own process, its own
 Wayland window, no Quickshell plugin and no bar widget.
 
+![OmaKeyboard in every Omarchy theme](docs/screenshots/themes.gif)
+
+It follows your desktop: the colours, the type scale, the spacing and the
+corner radius all come from the theme Omarchy has active, and it recolours
+itself the moment you switch. The animation above is one frame per theme
+shipped with Omarchy — no editing, just the app.
+
 ![The Keyboard page, listing mappings](docs/screenshots/keyboard.png)
 
 ## What it does
@@ -45,6 +52,8 @@ than drawing fewer.
 
 ![The same mappings drawn on the keyboard](docs/screenshots/keyboard-map.png)
 
+![Ready-made setups](docs/screenshots/recipes.png)
+
 **Recipes.** Ready-made setups a click away — Caps Lock as Control, Caps Lock
 as Escape, arrows under H J K L, Alt and Super swapped. Each one adds ordinary
 mappings you can edit afterwards, and a recipe whose keys are taken says so
@@ -61,6 +70,8 @@ installed version rather than hardcoded.
 **A key tester on the drawing.** Press keys and watch them sink on the map,
 with what each one types right now beside it. Holding a layer key shows that
 layer for as long as it is held.
+
+![The key tester](docs/screenshots/key-tester.png)
 
 **Undo, and snapshots.** Deleting a mapping, a shortcut or a whole keyboard's
 rules can be taken back for a few seconds, or with Ctrl+Z. Every apply takes a
@@ -145,12 +156,17 @@ throwaway XDG root:
 ```
 
 `bin/smoke` renders the app offscreen, so it needs neither a compositor nor a
-display. The same mechanism takes the screenshots in this file:
+display. The same mechanism takes every image in this file:
 
 ```bash
-QT_QPA_PLATFORM=offscreen OMAKEYBOARD_GRAB=shot.png OMAKEYBOARD_SIZE=1100x760 \
-  ./build/omakeyboard
+./bin/screenshots   # -> docs/screenshots/, including themes.gif
 ```
+
+It runs the app against a throwaway XDG root with a demo configuration, once
+per theme for the animation, and opens the dialogs it needs to photograph. It
+never touches your own configuration, and the apply screenshot deliberately
+hides the running Hyprland from the app, so taking a screenshot cannot reload
+your session.
 
 Requires `qt6-base`, `qt6-declarative`, `qt6-wayland`, `libxkbcommon`, `lua`
 and `hyprland`, all of which an Omarchy install already has.
@@ -210,6 +226,8 @@ device name" and "must never be loaded as code again".
 
 Any step failing restores the backup and reloads again. The dialog shows which
 step it got to.
+
+![What an apply did, stage by stage](docs/screenshots/apply.png)
 
 ## About "press a key"
 

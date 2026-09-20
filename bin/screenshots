@@ -1,0 +1,159 @@
+#!/usr/bin/env sh
+# Regenerate everything in docs/screenshots: the stills, and the animation
+# that shows the app in every Omarchy theme.
+#
+# Renders offscreen, so it needs neither a compositor nor your configuration:
+# the app runs against a throwaway XDG root with a demo set of mappings.
+set -eu
+
+ROOT="$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)"
+APP="$ROOT/build/omakeyboard"
+OUT="$ROOT/docs/screenshots"
+THEMES="${OMARCHY_THEMES_PATH:-/usr/share/omarchy/themes}"
+SIZE="${SIZE:-1100x760}"
+
+if [ ! -x "$APP" ]; then
+  echo "screenshots: build first ($APP is missing)" >&2
+  exit 1
+fi
+if ! command -v magick >/dev/null 2>&1; then
+  echo "screenshots: imagemagick is required" >&2
+  exit 1
+fi
+
+SANDBOX="$(mktemp -d)"
+trap 'rm -rf "$SANDBOX"' EXIT
+mkdir -p "$SANDBOX/config/hypr" "$SANDBOX/config/omakeyboard" \
+         "$SANDBOX/state/omakeyboard/backups" "$OUT"
+# Omarchy's bootstrap puts the user's config directory on Lua's path; the
+# apply pipeline test-loads the configuration and needs the same here.
+cat > "$SANDBOX/config/hypr/hyprland.lua" <<LUA
+-- Demo configuration for screenshots: the same bootstrap line a real Omarchy
+-- hyprland.lua carries, so the apply pipeline's test load behaves as it does
+-- on a real desktop.
+dofile((os.getenv("OMARCHY_PATH") or "/usr/share/omarchy") .. "/default/hypr/bootstrap.lua")
+LUA
+
+# A configuration worth looking at: a layer under the right hand, a swapped
+# modifier, one mapping switched off, and a couple of shortcuts.
+cat > "$SANDBOX/config/omakeyboard/rules.json" <<'RULES'
+{
+    "schema": 1,
+    "manageHyprlandBlock": true,
+    "profiles": [
+        {
+            "id": "all-keyboards", "name": "All keyboards", "deviceName": "", "enabled": true,
+            "remaps": [
+                { "id": "m1", "kind": "layerChooser", "sourceKey": "CAPS", "levels": ["ISO_Level3_Shift"], "enabled": true },
+                { "id": "m2", "kind": "layerKey", "sourceKey": "AC06", "levels": ["", "", "Left", "Left"], "enabled": true },
+                { "id": "m3", "kind": "layerKey", "sourceKey": "AC07", "levels": ["", "", "Down", "Down"], "enabled": true },
+                { "id": "m4", "kind": "layerKey", "sourceKey": "AC08", "levels": ["", "", "Up", "Up"], "enabled": true },
+                { "id": "m5", "kind": "layerKey", "sourceKey": "AC09", "levels": ["", "", "Right", "Right"], "enabled": true },
+                { "id": "m6", "kind": "modifierRemap", "sourceKey": "LCTL", "levels": ["Super_L"], "enabled": true },
+                { "id": "m7", "kind": "keyRemap", "sourceKey": "RALT", "levels": ["Escape"], "enabled": false, "note": "Off for now" }
+            ]
+        }
+    ],
+    "shortcuts": [
+        { "id": "s1", "keys": "SUPER + Q", "description": "Close window", "actionKind": "windowAction", "actionValue": "window.close", "enabled": true },
+        { "id": "s2", "keys": "SUPER + ALT + C", "description": "Centre window", "actionKind": "windowAction", "actionValue": "window.center", "enabled": true }
+    ]
+}
+RULES
+
+# A few snapshots, so the Settings page has a list to show.
+NOW="$(date +%s)"
+for i in 0 1 2 3 4 5 6; do
+  STAMP=$((NOW - i * 5400))
+  DIR="$SANDBOX/state/omakeyboard/backups/$STAMP"
+  mkdir -p "$DIR"
+  printf '{}' > "$DIR/rules.json"
+  cat > "$DIR/manifest.json" <<MANIFEST
+{
+  "id": "$STAMP",
+  "created": "$(date -d "@$STAMP" +%Y-%m-%dT%H:%M:%S)",
+  "label": "before apply",
+  "files": [
+    { "original": "/demo/rules.json", "stored": "rules.json" },
+    { "original": "/demo/generated.lua", "stored": "generated.lua" }
+  ]
+}
+MANIFEST
+done
+
+use_theme() {
+  rm -rf "$SANDBOX/state/omarchy/current/theme"
+  mkdir -p "$SANDBOX/state/omarchy/current"
+  cp -r "$THEMES/$1" "$SANDBOX/state/omarchy/current/theme"
+  printf '%s\n' "$1" > "$SANDBOX/state/omarchy/current/theme.name"
+}
+
+# shot <file> [page] [what-to-open]
+#
+# Reading the attached keyboards through hyprctl is harmless and makes the
+# screenshots show a real device, so a running Hyprland is left visible. The
+# one exception is the apply screenshot: see shot_offline below.
+shot() {
+  file="$1"
+  page="${2:-0}"
+  open="${3:-}"
+  XDG_CONFIG_HOME="$SANDBOX/config" \
+  XDG_STATE_HOME="$SANDBOX/state" \
+  QT_QPA_PLATFORM=offscreen \
+  OMAKEYBOARD_GRAB="$file" \
+  OMAKEYBOARD_SIZE="$SIZE" \
+  OMAKEYBOARD_PAGE="$page" \
+  OMAKEYBOARD_OPEN="$open" \
+  "$APP" >/dev/null 2>&1
+}
+
+# An apply is the only thing here that would reach outside the sandbox: it
+# ends in `hyprctl reload`, on the very compositor this is running under.
+# Hiding the instance makes the app treat Hyprland as absent, so it saves,
+# skips the reload, and says so.
+shot_offline() {
+  HYPRLAND_INSTANCE_SIGNATURE= shot "$@"
+}
+
+DEFAULT_THEME="${DEFAULT_THEME:-tokyo-night}"
+use_theme "$DEFAULT_THEME"
+
+echo "screenshots: stills"
+shot "$OUT/keyboard.png"        0
+shot "$OUT/keyboard-map.png"    0 layer
+shot "$OUT/new-mapping.png"     0 mapping
+shot "$OUT/recipes.png"         0 recipes
+shot "$OUT/key-tester.png"      0 tester
+shot "$OUT/shortcuts.png"       1
+shot "$OUT/shortcut-recipes.png" 1 recipes
+shot "$OUT/advanced.png"        2
+shot "$OUT/settings.png"        3
+shot_offline "$OUT/apply.png"   0 apply
+
+echo "screenshots: one frame per theme"
+FRAMES="$SANDBOX/frames"
+mkdir -p "$FRAMES"
+INDEX=0
+for THEME_DIR in "$THEMES"/*/; do
+  THEME="$(basename "$THEME_DIR")"
+  [ -f "$THEME_DIR/colors.toml" ] || continue
+  use_theme "$THEME"
+  # Alternating views, so the animation shows the app as well as its colours.
+  FRAME="$FRAMES/$(printf '%02d' "$INDEX")-$THEME.png"
+  case $((INDEX % 3)) in
+    0) shot "$FRAME" 0 ;;
+    1) shot "$FRAME" 0 layer ;;
+    2) shot "$FRAME" 3 ;;
+  esac
+  # The theme's name in the corner, so the animation says what it is showing.
+  magick "$FRAME" -gravity SouthEast -pointsize 20 \
+    -fill '#ffffff' -undercolor '#000000b0' -annotate +16+14 " $THEME " "$FRAME"
+  INDEX=$((INDEX + 1))
+done
+
+echo "screenshots: assembling themes.gif from $INDEX frames"
+magick -delay 55 -loop 0 "$FRAMES"/*.png \
+  -resize 880x -colors 96 -layers Optimize "$OUT/themes.gif"
+
+use_theme "$DEFAULT_THEME"
+ls -la "$OUT"

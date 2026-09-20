@@ -36,6 +36,13 @@ Item {
         return page.layerView
     }
 
+    // Named entry points, so Main can open these for a screenshot without
+    // reaching into the page's children.
+    function newMapping() { mappingEditor.openForNew() }
+    function showMap(layer) { page.mapView = true; page.layerView = layer }
+    function startTester() { page.mapView = true; tester.arm() }
+    function showRecipes() { page.refreshRecipes(); recipeDialog.open() }
+
     // A click on the map: edit what the key already does in the view shown,
     // or start a new mapping with the key filled in.
     function editKey(entry) {

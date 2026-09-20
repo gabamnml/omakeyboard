@@ -260,6 +260,9 @@ Item {
         }
     }
 
+    function newMapping() { shortcutEditor.openForNew() }
+    function showRecipes() { page.refreshRecipes(); recipeDialog.open() }
+
     ShortcutEditor {
         id: shortcutEditor
         parent: Overlay.overlay
