@@ -1,0 +1,17 @@
+build/
+build-tests/
+*.o
+*.so
+moc_*
+qrc_*
+ui_*
+Makefile*
+.qmake.stash
+*.pro.user
+packaging/*.pkg.tar.zst
+packaging/pkg/
+packaging/src/
+packaging/aur/*.pkg.tar.zst
+packaging/aur/src/
+packaging/aur/pkg/
+packaging/aur/omakeyboard/

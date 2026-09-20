@@ -1,0 +1,61 @@
+#!/usr/bin/env sh
+# Load the interface and walk every page, with no compositor and no access to
+# the real configuration. Fails on any QML warning: the unit tests cover the
+# engine, and this is what catches a page that no longer loads.
+set -eu
+
+ROOT="$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)"
+APP="$ROOT/build/omakeyboard"
+
+if [ ! -x "$APP" ]; then
+  echo "smoke: build first ($APP is missing)" >&2
+  exit 1
+fi
+
+SANDBOX="$(mktemp -d)"
+trap 'rm -rf "$SANDBOX"' EXIT
+mkdir -p "$SANDBOX/config/hypr" "$SANDBOX/state"
+# Enough of an Omarchy to look real: without this the app says so, correctly,
+# and half the interface is beside the point.
+printf -- '-- smoke test\n' > "$SANDBOX/config/hypr/hyprland.lua"
+
+OUTPUT="$SANDBOX/out.txt"
+set +e
+XDG_CONFIG_HOME="$SANDBOX/config" \
+XDG_STATE_HOME="$SANDBOX/state" \
+QT_QPA_PLATFORM=offscreen \
+QT_FORCE_STDERR_LOGGING=1 \
+OMAKEYBOARD_GRAB="$SANDBOX/shot.png" \
+OMAKEYBOARD_SIZE=1100x800 \
+OMAKEYBOARD_VISIT_PAGES=1 \
+"$APP" >"$OUTPUT" 2>&1
+STATUS=$?
+set -e
+
+FAILED=0
+
+if [ "$STATUS" -ne 0 ]; then
+  echo "smoke: the app exited with status $STATUS" >&2
+  FAILED=1
+fi
+
+if [ ! -s "$SANDBOX/shot.png" ]; then
+  echo "smoke: nothing was rendered" >&2
+  FAILED=1
+fi
+
+# Anything QML complains about: a missing type, a broken binding, a property
+# that does not exist. The portal line is the sandbox having no desktop.
+COMPLAINTS="$(grep -v 'qt.qpa.services' "$OUTPUT" \
+  | grep -Ei 'qrc:|\.qml|binding loop|is not defined|Unable to assign|QML' || true)"
+if [ -n "$COMPLAINTS" ]; then
+  echo "smoke: QML complained:" >&2
+  echo "$COMPLAINTS" >&2
+  FAILED=1
+fi
+
+if [ "$FAILED" -ne 0 ]; then
+  exit 1
+fi
+
+echo "smoke: the interface loads and every page opens."

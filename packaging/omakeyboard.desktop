@@ -1,0 +1,11 @@
+[Desktop Entry]
+Type=Application
+Name=OmaKeyboard
+GenericName=Keyboard Settings
+Comment=Remap keys, build layers, and manage shortcuts on Omarchy
+Exec=omakeyboard
+Icon=omakeyboard
+Terminal=false
+Categories=Settings;HardwareSettings;DesktopSettings;
+Keywords=keyboard;key;remap;keymap;layer;shortcut;keybinding;capslock;modifier;xkb;
+StartupWMClass=omakeyboard

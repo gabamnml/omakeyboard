@@ -1,0 +1,29 @@
+#!/usr/bin/env sh
+# Run the engine test suite. No display and no Hyprland required: every test
+# runs against a throwaway XDG root.
+set -eu
+
+ROOT="$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)"
+BUILD_DIR="$ROOT/build-tests"
+
+if command -v qmake6 >/dev/null 2>&1; then
+  QMAKE=qmake6
+else
+  QMAKE=qmake
+fi
+
+mkdir -p "$BUILD_DIR"
+cd "$BUILD_DIR"
+
+"$QMAKE" "$ROOT/tests/tests.pro"
+make -j"$(nproc 2>/dev/null || echo 1)"
+
+QT_QPA_PLATFORM=offscreen ./tst_omakeyboard "$@"
+
+# The interface is not covered by those: loading it is a separate check, and
+# only possible once the app itself has been built.
+if [ -x "$ROOT/build/omakeyboard" ]; then
+  "$ROOT/bin/smoke"
+else
+  echo "test: skipping the interface check -- run bin/build first." >&2
+fi

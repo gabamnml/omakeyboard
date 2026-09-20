@@ -1,0 +1,32 @@
+<RCC>
+    <qresource prefix="/">
+        <file>qml/qmldir</file>
+        <file>qml/Main.qml</file>
+        <file alias="wordmark.svg">../resources/wordmark.svg</file>
+        <file alias="omakeyboard.png">../resources/icons/256.png</file>
+        <file>qml/Theme.qml</file>
+        <file>qml/pages/KeyboardPage.qml</file>
+        <file>qml/pages/MappingEditor.qml</file>
+        <file>qml/pages/ShortcutsPage.qml</file>
+        <file>qml/pages/ShortcutEditor.qml</file>
+        <file>qml/pages/AdvancedPage.qml</file>
+        <file>qml/pages/SettingsPage.qml</file>
+        <file>qml/components/AppButton.qml</file>
+        <file>qml/components/Card.qml</file>
+        <file>qml/components/CatalogPicker.qml</file>
+        <file>qml/components/ConflictBanner.qml</file>
+        <file>qml/components/FlagSetting.qml</file>
+        <file>qml/components/KeyCap.qml</file>
+        <file>qml/components/Icon.qml</file>
+        <file>qml/components/IconButton.qml</file>
+        <file>qml/components/ApplyReport.qml</file>
+        <file>qml/components/RecipeCard.qml</file>
+        <file>qml/components/ToggleSwitch.qml</file>
+        <file>qml/components/KeyboardMap.qml</file>
+        <file>qml/components/Segmented.qml</file>
+        <file>qml/components/NumberSetting.qml</file>
+        <file>qml/components/KeyCaptureField.qml</file>
+        <file>qml/components/FilterField.qml</file>
+        <file>qml/components/SectionHeader.qml</file>
+    </qresource>
+</RCC>
