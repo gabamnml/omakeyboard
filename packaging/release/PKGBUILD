@@ -8,13 +8,10 @@ arch=('x86_64' 'aarch64')
 url='https://github.com/gabamnml/omakeyboard'
 license=('MIT')
 install='omakeyboard.install'
-# The build already strips nothing useful, and the Omarchy repository's own
-# Qt applications ship without a separate debug package.
 options=('!debug')
 
-# Everything here is part of an Omarchy system already: Qt for the interface,
-# libxkbcommon for the keymaps, lua to read the Hyprland configuration, and
-# Hyprland itself to apply changes. No input daemon is involved.
+# hyprland and lua are runtime tools, not linked: hyprctl applies the
+# changes, and lua reads the bindings already in the configuration.
 depends=(
   'hicolor-icon-theme'
   'hyprland'
@@ -30,17 +27,12 @@ makedepends=(
   'qt6-base'
   'qt6-declarative'
 )
-# The interface check renders the app offscreen, so the tests need Qt Quick
-# as well as Qt itself.
 checkdepends=(
   'qt6-base'
   'qt6-declarative'
 )
 optdepends=('xdg-desktop-portal: follow the desktop dark mode and text scale, and use the desktop file chooser when exporting or importing')
 
-# Both destinations build a published tag, never a working tree. After tagging
-# a new version, update pkgver and take the checksum from `makepkg -g`, then
-# regenerate .SRCINFO with `makepkg --printsrcinfo > .SRCINFO`.
 source=("$pkgname-$pkgver.tar.gz::https://github.com/gabamnml/omakeyboard/archive/refs/tags/v$pkgver.tar.gz")
 sha256sums=('3cc272c47cd0670b6d475e058fafbfbe264555780e7442c357428bbf1b7282a6')
 
@@ -60,8 +52,6 @@ package() {
   install -Dm755 build/omakeyboard "$pkgdir/usr/bin/omakeyboard"
   install -Dm644 packaging/omakeyboard.desktop \
     "$pkgdir/usr/share/applications/omakeyboard.desktop"
-  # One raster per size the hicolor theme declares, generated from
-  # resources/omakeyboard-logo.png by resources/make-icons.sh.
   for size in 16 22 24 32 48 64 96 128 256 512; do
     install -Dm644 "resources/icons/${size}.png" \
       "$pkgdir/usr/share/icons/hicolor/${size}x${size}/apps/omakeyboard.png"
