@@ -38,6 +38,15 @@ else.
 
 ## Install
 
+OmaKeyboard is packaged in Omarchy's own repository:
+
+```bash
+omarchy-pkg-add omakeyboard
+```
+
+New packages land on Omarchy's edge channel first and reach stable with the
+next Omarchy release. Until then, on stable, install the release package:
+
 ```bash
 sudo pacman -U https://github.com/gabamnml/omakeyboard/releases/download/v0.1.0/omakeyboard-0.1.0-1-x86_64.pkg.tar.zst
 ```
